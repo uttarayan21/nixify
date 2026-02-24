@@ -22,7 +22,7 @@ pub fn parse_toml(input: &str) -> Result<Value> {
 }
 
 pub fn parse_yaml(input: &str) -> Result<Value> {
-    let value: Value = serde_yml::from_str(input)
+    let value: Value = serde_yaml2::from_str(input)
         .change_context(Error)
         .attach("Failed to parse as yaml")?;
     Ok(value)
