@@ -53,12 +53,18 @@ pub fn parse(input: &str, format: Format) -> Result<Value> {
     .attach("Failed to parse input")
 }
 pub fn try_parse_all(input: &str) -> Result<Value> {
-    parse_json(input)
-        .inspect_err(|e| eprintln!("{e:?}"))
-        .or_else(|_| parse_toml(input))
-        .inspect_err(|e| eprintln!("{e:?}"))
-        .or_else(|_| parse_yaml(input))
-        .change_context(Error)
+    let mut err = None;
+    let out = parse_json(input)
+        .or_else(|e| {
+            err = Some(e);
+            parse_toml(input)
+        })
+        .or_else(|e| {
+            err.get_or_insert(e);
+            parse_yaml(input)
+        });
+
+    out.change_context(Error)
         .attach("Failed to parse input as any supported format (tried json, then toml, then yaml)")
 }
 // }
