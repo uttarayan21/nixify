@@ -15,17 +15,23 @@ use errors::*;
 use serde_json::Value;
 
 pub fn parse_toml(input: &str) -> Result<Value> {
-    let value: Value = toml::from_str(input).change_context(Error)?;
+    let value: Value = toml::from_str(input)
+        .change_context(Error)
+        .attach("Failed to parse as toml")?;
     Ok(value)
 }
 
 pub fn parse_yaml(input: &str) -> Result<Value> {
-    let value: Value = serde_yml::from_str(input).change_context(Error)?;
+    let value: Value = serde_yml::from_str(input)
+        .change_context(Error)
+        .attach("Failed to parse as yaml")?;
     Ok(value)
 }
 
 pub fn parse_json(input: &str) -> Result<Value> {
-    let value: Value = serde_json::from_str(input).change_context(Error)?;
+    let value: Value = serde_json::from_str(input)
+        .change_context(Error)
+        .attach("Failed to parse as json")?;
     Ok(value)
 }
 
@@ -43,11 +49,16 @@ pub fn parse(input: &str, format: Format) -> Result<Value> {
         Format::Yaml => parse_yaml(input),
         Format::Json => parse_json(input),
     }
+    .change_context(Error)
+    .attach("Failed to parse input")
 }
 pub fn try_parse_all(input: &str) -> Result<Value> {
     parse_json(input)
+        .inspect_err(|e| eprintln!("{e:?}"))
         .or_else(|_| parse_toml(input))
+        .inspect_err(|e| eprintln!("{e:?}"))
         .or_else(|_| parse_yaml(input))
         .change_context(Error)
+        .attach("Failed to parse input as any supported format (tried json, then toml, then yaml)")
 }
 // }
