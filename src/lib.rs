@@ -1,17 +1,6 @@
 pub mod errors;
 use errors::*;
 
-// #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
-// #[serde(untagged)]
-// pub enum Value {
-//     String(String),
-//     Integer(i64),
-//     Float(f64),
-//     Boolean(bool),
-//     Array(Vec<Value>),
-//     Map(IndexMap<String, Value>),
-//     Object(Box<Value>),
-// }
 use serde_json::Value;
 
 pub fn parse_toml(input: &str) -> Result<Value> {
@@ -21,8 +10,17 @@ pub fn parse_toml(input: &str) -> Result<Value> {
     Ok(value)
 }
 
+#[cfg(feature = "serde_yaml2")]
 pub fn parse_yaml(input: &str) -> Result<Value> {
     let value: Value = serde_yaml2::from_str(input)
+        .change_context(Error)
+        .attach("Failed to parse as yaml")?;
+    Ok(value)
+}
+
+#[cfg(not(feature = "serde_yaml2"))]
+pub fn parse_yaml(input: &str) -> Result<Value> {
+    let value: Value = serde_yaml_ng::from_str(input)
         .change_context(Error)
         .attach("Failed to parse as yaml")?;
     Ok(value)
